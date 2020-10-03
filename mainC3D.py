@@ -397,8 +397,22 @@ tab2_combo.pack(anchor='nw',padx=30,pady=20)
 tab2_combo.current(1)
 tab2_combo.bind("<<ComboboxSelected>>",comboclick_2)
 
+#For Bar chart
 
+from Current_matplots_with_db import plot_graph
 
+def plot_graph_1():
+    if btn_text.get() ==  "bar chart":
+        plot_graph(frame_inside_fr_3,btn_text)
+    elif btn_text.get() == "refresh":
+        pass
+
+frame_inside_fr_3 = Frame(my_frame1)
+frame_inside_fr_3.pack(anchor = 'ne',side = TOP)
+btn_text = StringVar()
+btn_text.set("bar chart")
+Bar_plot_btn = Button(frame_inside_fr_1, textvariable =btn_text, command = plot_graph_1)
+Bar_plot_btn.pack(padx=25,pady=2,side=RIGHT)
 
 ##frame_inside_fr_1
 scvalue = StringVar()
@@ -414,8 +428,8 @@ b2.pack(padx=25,pady=2,side=RIGHT)
 
 
 frame_inside_fr_2 = Frame(my_frame1)
-frame_inside_fr_2.pack(side=LEFT,pady = 5,padx=20 )
-
+# frame_inside_fr_2.pack(side=LEFT,pady = 5,padx=20 )
+frame_inside_fr_2.pack(after = frame_inside_fr_1, side = LEFT)
 fr1= LabelFrame(frame_inside_fr_2,text="frame1",font=('Fixedsys',10))
 # fr1.grid(row=0,column=4)
 fr1.pack(side=LEFT ,padx=20,pady=10)

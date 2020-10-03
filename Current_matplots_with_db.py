@@ -8,7 +8,8 @@ NavigationToolbar2Tk)
 
 
 
-def plot_graph():
+def plot_graph(win_frame,btn_text):
+    btn_text.set("refresh")
     conn = sqlite3.connect('action.db')
 
     everyday_count_1 = []
@@ -35,7 +36,7 @@ def plot_graph():
 
     x=np.arange(len(days))
     width = 0.23
-    fig = Figure(figsize = (10, 4),dpi = 100)
+    fig = Figure(figsize = (8, 4),dpi = 100)
     ax = fig.add_subplot(111)
     rects1 = ax.bar(x - width/2, count_daywise_1, width, label='gun')
     rects2 = ax.bar(x + width/2, count_daywise_2, width, label='fight')
@@ -44,17 +45,29 @@ def plot_graph():
     ax.set_xticks(x)
     ax.set_xticklabels(days)
     ax.legend()
-    canvas = FigureCanvasTkAgg(fig,master = window)
+
+    canvas = FigureCanvasTkAgg(fig,master = win_frame)
+    canvas.get_tk_widget().delete('all')
     canvas.draw()
+    # canvas.get_tk_widget().update()
     canvas.get_tk_widget().pack()
 
-window = Tk()
-window.title('Plotting in Tkinter')
-window.geometry("700x500")
-plot_button = Button(master=window,
-                     command=plot_graph,
-                     height=2,
-                     width=10,
-                     text="Plot")
-plot_button.pack()
-window.mainloop()
+#
+# def plot_btn_initiator():
+#     plot_graph(window)
+
+# window = Tk()
+# window.title('Plotting in Tkinter')
+# window.geometry("700x500")
+#
+# btn_text = StringVar()
+# btn_text.set("original_btn")
+# plot_button = Button(master=window,
+#                      command=plot_btn_initiator,
+#                      height=2,
+#                      width=10,
+#                      textvariable=btn_text)
+#
+# print( "dsss",plot_button.cget('text'))
+# plot_button.pack()
+# window.mainloop()
