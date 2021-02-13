@@ -40,7 +40,82 @@ import sqlite3
 import calendar
 
 stop_thread = False
+gun_global =None
+action_global = 0.0
+import winsound
 
+ringing = 0
+stopalarm = 0
+msgbox = 0
+
+import time
+def messbox():
+    global msgbox
+    if msgbox == 1:
+        pop = Toplevel(root)
+        pop.title("ALERT!")
+        pop.geometry("300x100")  # wxh
+        pop.maxsize(300, 100)
+
+        global pop_label
+        label_1 = Label(pop, text="Suspicious Activity Detected!", fg='red', font=("helvetica", 12))
+        label_1.pack(pady=5)
+        f1 = Frame(pop)
+        f1.pack(pady=10)
+
+        time_text = Label(f1, text='Time:', font=("helvetica", 11))
+        time_text.grid(row=2, column=1)
+
+        pop_label = Label(f1, text="", font=("helvetica", 10))
+        pop_label.grid(row=2, column=2)
+        t = time.localtime()
+        current_time = time.strftime("%H:%M:%S", t)
+        pop_label.config(text=current_time)
+
+        msgbox = 0
+
+def ring():
+    global ringing,stopalarm,msgbox
+    while(True):
+        winsound.PlaySound("alarm.wav", winsound.SND_NOSTOP)
+        #alert messagebox
+        msgbox=1
+
+        if stopalarm == 1:
+            stopalarm = 0
+            ringing = 0
+            break
+
+def stopalaramthread():
+    global stopalarm
+    stopalarm = 1
+
+def trigger_alarm():
+    global ringing
+
+    if gun_global !=None:
+            if (float(gun_global[1]) or action_global )>= 0.50:
+                print("suspicious activity",gun_global[1],action_global)
+                ringing = 1
+
+                th_3 = threading.Thread(target=ring)
+                th_3.start()
+                th_4 = threading.Thread(target=messbox)
+                th_4.start()
+
+
+
+
+
+                # at_obj = at()
+                # at_obj.run123()
+                # while(True and ringing == 1 ):
+                # winsound.PlaySound("alarm.wav", winsound.SND_NOSTOP)
+                #     time.sleep(5)
+                #     # if  userpress:
+                #     break
+            # else:
+            #     pass
 
 
 
@@ -151,7 +226,11 @@ def detect(save_img, weights, source, output, img_size, conf_thres, iou_thres, d
 
 set_logging()
 device = select_device('')
-model = attempt_load('best_new_single_gun.pt',
+#old_only_gun
+# model = attempt_load('best_new_single_gun.pt',
+#                          map_location=torch.device("cuda"))
+#for_Human_shortgun_handgun_swords
+model = attempt_load('Weaponwithalbumentationbest.pt',
                          map_location=torch.device("cuda"))
 half = device.type != 'cpu'
 model.half()
@@ -209,6 +288,7 @@ import datetime
 import time
 
 def start1():
+    global gun_global
 
     inferinput = scvalue.get()
     print(inferinput)
@@ -219,16 +299,26 @@ def start1():
     with torch.no_grad():
         while (True):
                 screenshotss = wincap.get_screenshot()
-                if np.array_equal(screenshotss,np.zeros((2,2))) == False:
-                    i += 1
-                    cv2.imwrite('screenshot_1.jpg', screenshotss)
+                # if np.array_equal(screenshotss,np.zeros((2,2))) == False:
+                i += 1
+                cv2.imwrite('screenshot_1.jpg', screenshotss)
 
-                    with HiddenPrints():
-                        gun_pred_tmp = detect(False, 'Weaponwithalbumentationbest.pt', 'screenshot_1.jpg',
+                with HiddenPrints():
+                    gun_pred_tmp = detect(False, 'Weaponwithalbumentationbest.pt', 'screenshot_1.jpg',
                                                    'inference/output', 416,
                                                   0.5, 0.5, torch.device('cuda'), True, False, None, False, False, False, model)
 
-                    gun_pred.append(gun_pred_tmp)
+
+                    gun_global = gun_pred_tmp
+                    if gun_pred_tmp!= None:
+                        gun = gun_pred_tmp.split(" ")
+                        # print(f'{gun[0]}/{float(gun[1])*100}%')
+                        gun_pred.append(f'{gun[0]}/{float(gun[1])*100}%')
+                        gun_global =gun
+                        if ringing == 0:
+                            trigger_alarm()
+
+
                     ###DATE AND TIME WORK ####
                     t = time.localtime()
                     current_time = time.strftime("%H:%M:%S", t)
@@ -242,7 +332,7 @@ def start1():
 
                 if stop_thread == True:
                     cv2.destroyAllWindows()
-                    print(cv2.getWindowProperty('p', 1))
+                    # print(cv2.getWindowProperty('p', 1))
 
                     conn = sqlite3.connect('action.db')
                     c = conn.cursor()
@@ -260,6 +350,7 @@ def start1():
 
 
 def start2():
+    global action_global
     inferinput = scvalue.get()
     wincap_2 = WindowCapture(inferinput)
     i = 0
@@ -273,7 +364,12 @@ def start2():
                 img.append(screenshot)
                 if len(img) == 16:
                     res_from_model_format = fight_recog(img, i)
+                    action = res_from_model_format.split("/")
+                    if action[1] == "Fights":
+                        # print(action[0])
+                        action_global = float(action[0])
                     img = []
+
 
                     t = time.localtime()
                     current_time = time.strftime("%H:%M:%S", t)
@@ -315,6 +411,11 @@ def starter():
     th_2 = threading.Thread(target=start2)
     th_1.start()
     th_2.start()
+
+
+
+
+
 
 
 
@@ -374,7 +475,8 @@ options = ["Recent","Ascending"]
 root = themed_tk.ThemedTk(theme="radiance")
 
 root.title("S.H.A.D")
-root.geometry('500x500')
+root.geometry('1000x500')
+
 
 my_notebook = ttk.Notebook(root)
 my_notebook.pack(fill=BOTH,expand=YES)
@@ -426,6 +528,8 @@ b.pack(padx=1,pady=2,side=LEFT)
 b2 = Button(frame_inside_fr_1, text ="Stop", command = stop_it)
 b2.pack(padx=25,pady=2,side=RIGHT)
 
+b3 = Button(frame_inside_fr_1, text ="Stop Alarm", command = stopalaramthread)
+b3.pack(padx=75,pady=2,side=RIGHT)
 
 frame_inside_fr_2 = Frame(my_frame1)
 # frame_inside_fr_2.pack(side=LEFT,pady = 5,padx=20 )
