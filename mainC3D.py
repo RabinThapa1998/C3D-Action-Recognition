@@ -299,14 +299,14 @@ def start1():
     with torch.no_grad():
         while (True):
                 screenshotss = wincap.get_screenshot()
-                # if np.array_equal(screenshotss,np.zeros((2,2))) == False:
-                i += 1
-                cv2.imwrite('screenshot_1.jpg', screenshotss)
+                if np.array_equal(screenshotss,np.zeros((2,2))) == False:
+                    i += 1
+                    cv2.imwrite('screenshot_1.jpg', screenshotss)
 
-                with HiddenPrints():
-                    gun_pred_tmp = detect(False, 'Weaponwithalbumentationbest.pt', 'screenshot_1.jpg',
-                                                   'inference/output', 416,
-                                                  0.5, 0.5, torch.device('cuda'), True, False, None, False, False, False, model)
+                    with HiddenPrints():
+                        gun_pred_tmp = detect(False, 'Weaponwithalbumentationbest.pt', 'screenshot_1.jpg',
+                                                       'inference/output', 416,
+                                                      0.5, 0.5, torch.device('cuda'), True, False, None, False, False, False, model)
 
 
                     gun_global = gun_pred_tmp
